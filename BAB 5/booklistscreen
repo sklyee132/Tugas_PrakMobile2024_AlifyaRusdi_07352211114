@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import '../models/book_models.dart';
+import '../services/api_service.dart';
+import 'book_detail_screen.dart';
+import 'add_edit_book_screen.dart';
+
+class BookListScreen extends StatefulWidget {
+  @override
+  _BookListScreenState createState() => _BookListScreenState();
+}
+
+class _BookListScreenState extends State<BookListScreen> {
+  final ApiService _apiService = ApiService();
+  List<Book> _books = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final books = await _apiService.fetchBooks();
+      setState(() {
+        _books = books;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Book List'),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _books.isEmpty
+              ? Center(child: Text('No books available'))
+              : ListView.builder(
+                  itemCount: _books.length,
+                  itemBuilder: (context, index) {
+                    final book = _books[index];
+                    return ListTile(
+                      title: Text(book.title),
+                      subtitle: Text(book.author),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookDetailScreen(book: book),
+                          ),
+                        );
+                        if (result == true) {
+                          _loadBooks();
+                        }
+                      },
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddEditBookScreen(),
+            ),
+          );
+          if (result == true) {
+            _loadBooks();
+          }
+        },
+      ),
+    );
+  }
+}
