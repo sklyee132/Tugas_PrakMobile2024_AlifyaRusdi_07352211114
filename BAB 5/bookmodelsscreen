@@ -1,0 +1,89 @@
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../models/book_models.dart';
+
+class ApiService {
+  final String baseUrl = 'https://events.hmti.unkhair.ac.id/api';
+
+  // GET - Fetch all books
+  Future<List<Book>> fetchBooks() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/books'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Book.fromJson(data)).toList();
+      } else {
+        throw Exception('Failed to load books');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // GET - Fetch single book by ID
+  Future<Book> fetchBookById(int id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/books/$id'));
+
+      if (response.statusCode == 200) {
+        return Book.fromJson(json.decode(response.body));
+      } else {
+        throw Exception('Book not found');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // POST - Add new book
+  Future<Book> addBook(Book book) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/books'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(book.toJson()),
+      );
+
+      if (response.statusCode == 201) {
+        return Book.fromJson(json.decode(response.body));
+      } else {
+        throw Exception('Failed to add book');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // PUT - Update book
+  Future<Book> updateBook(int id, Book book) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/books/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(book.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return Book.fromJson(json.decode(response.body));
+      } else {
+        throw Exception('Failed to update book');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // DELETE - Delete book
+  Future<void> deleteBook(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/books/$id'));
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete book');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+}
